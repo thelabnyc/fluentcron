@@ -7,16 +7,15 @@ from __future__ import annotations
 from typing import NamedTuple
 
 from .types import (
-    HourInterval,
-    MinuteInterval,
-    Hour,
-    Minute,
     DayOfMonth,
+    Hour,
+    HourInterval,
+    Minute,
+    MinuteInterval,
+    Weekday,
     WeekdayInt,
     WeekdayStr,
-    Weekday,
 )
-
 
 WEEKDAY_MAPPING: dict[WeekdayStr, WeekdayInt] = {
     # Long names

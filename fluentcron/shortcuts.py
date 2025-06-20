@@ -4,12 +4,12 @@ Convenience functions for common schedules
 
 from .schedule import CronSchedule
 from .types import (
-    Weekday,
-    Hour,
-    Minute,
     DayOfMonth,
-    MinuteInterval,
+    Hour,
     HourInterval,
+    Minute,
+    MinuteInterval,
+    Weekday,
 )
 
 
