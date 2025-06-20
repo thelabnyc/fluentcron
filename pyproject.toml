@@ -26,7 +26,7 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["thelabtyping"]
+packages = ["fluentcron"]
 
 [tool.isort]
 profile = "black"
