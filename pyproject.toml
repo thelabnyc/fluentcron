@@ -19,7 +19,7 @@ Repository = "https://gitlab.com/thelabnyc/fluentcron"
 
 [dependency-groups]
 dev = [
-    "mypy (>=1.15.0)",
+    "mypy (>=1.17.1)",
     "ruff (>=0.11.6)",
     "coverage (>=7.10.6)",
     "tox (>=4.25.0)",
