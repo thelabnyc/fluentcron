@@ -119,7 +119,7 @@ dev = [
 dev = [
     { name = "coverage", specifier = ">=7.10.6" },
     { name = "mypy", specifier = ">=1.17.1" },
-    { name = "ruff", specifier = ">=0.11.6" },
+    { name = "ruff", specifier = ">=0.12.11" },
     { name = "tox", specifier = ">=4.25.0" },
 ]
 
