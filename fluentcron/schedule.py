@@ -5,6 +5,7 @@ Core cron schedule DSL functionality
 from __future__ import annotations
 
 from typing import NamedTuple
+import hashlib
 
 from .types import (
     DayOfMonth,
@@ -53,6 +54,11 @@ WEEKDAY_MAPPING: dict[WeekdayStr, WeekdayInt] = {
 }
 
 
+def _jitter_offset(jitter: str, modulus: int) -> int:
+    h = hashlib.sha256(jitter.encode("utf-8")).hexdigest()
+    return int(h, 16) % modulus
+
+
 def _normalize_weekday(weekday: Weekday) -> WeekdayInt:
     # Already an int?
     if isinstance(weekday, int):
@@ -85,27 +91,47 @@ class CronSchedule(NamedTuple):
         """Finalize the expression by casting it to a string"""
         return str(self)
 
-    def at(self, hour: Hour, minute: Minute = 0) -> CronSchedule:
+    def at(
+        self, hour: Hour, minute: Minute | None = None, *, jitter: str | None = None
+    ) -> CronSchedule:
         """Set the time (hour and minute)."""
+        if minute is not None and jitter is not None:
+            raise ValueError("Cannot specify both minute and jitter")
         if not (0 <= hour <= 23):
             raise ValueError("Hour must be between 0 and 23")
-        if not (0 <= minute <= 59):
+        if jitter is not None:
+            resolved_minute = _jitter_offset(jitter, 60)
+        elif minute is not None:
+            resolved_minute = minute
+        else:
+            resolved_minute = 0
+        if not (0 <= resolved_minute <= 59):
             raise ValueError("Minute must be between 0 and 59")
 
-        return self._replace(hour=str(hour), minute=str(minute))
+        return self._replace(hour=str(hour), minute=str(resolved_minute))
 
-    def every_n_minutes(self, n: MinuteInterval) -> CronSchedule:
+    def every_n_minutes(
+        self, n: MinuteInterval, *, jitter: str | None = None
+    ) -> CronSchedule:
         """Run every N minutes."""
         if not (1 <= n <= 59):
             raise ValueError("Minutes must be between 1 and 59")
-        minute = f"*/{n}" if n > 1 else "*"
+        if n == 1 or jitter is None:
+            minute = f"*/{n}" if n > 1 else "*"
+        else:
+            offset = _jitter_offset(jitter, n)
+            minute = f"{offset}/{n}"
         return self._replace(minute=minute)
 
-    def every_n_hours(self, n: HourInterval) -> CronSchedule:
+    def every_n_hours(
+        self, n: HourInterval, *, jitter: str | None = None
+    ) -> CronSchedule:
         """Run every N hours."""
         if not (1 <= n <= 23):
             raise ValueError("Hours must be between 1 and 23")
         hour = f"*/{n}" if n > 1 else "*"
+        if jitter is not None:
+            return self._replace(hour=hour, minute=str(_jitter_offset(jitter, 60)))
         return self._replace(hour=hour)
 
     def daily(self) -> CronSchedule:

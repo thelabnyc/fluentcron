@@ -14,6 +14,7 @@ A fluent interface for constructing crontab schedules in Python. Build readable,
 - **Immutable**: Schedule objects are immutable and hashable
 - **Readable**: Self-documenting code that's easy to understand
 - **Flexible**: Support for complex schedules and common presets
+- **Deterministic Jitter**: Spread tasks across minutes to avoid thundering herd problems
 
 ## Installation
 
@@ -53,7 +54,7 @@ The main class for building cron expressions using a fluent interface.
 
 #### Time Methods
 
-##### `at(hour, minute=0)`
+##### `at(hour, minute=None, *, jitter=None)`
 
 Set the specific time to run.
 
@@ -63,10 +64,14 @@ CronSchedule().daily().at(8, 30)  # "30 8 * * *"
 
 # Daily at midnight (minute defaults to 0)
 CronSchedule().daily().at(0)      # "0 0 * * *"
+
+# Daily at 12:XX where XX is a deterministic hash of the jitter string
+CronSchedule().daily().at(12, jitter="my-task")  # "54 12 * * *"
 ```
 
 - `hour`: 0-23 (required)
 - `minute`: 0-59 (optional, defaults to 0)
+- `jitter`: a string hashed to determine the minute (keyword-only, mutually exclusive with `minute`)
 
 #### Frequency Methods
 
@@ -96,27 +101,31 @@ CronSchedule().monthly().on_day(15).at(12)  # "0 12 15 * *"
 
 #### Interval Methods
 
-##### `every_n_minutes(n)`
+##### `every_n_minutes(n, *, jitter=None)`
 
 Run every N minutes.
 
 ```python
-CronSchedule().every_n_minutes(15)  # "*/15 * * * *"
-CronSchedule().every_n_minutes(1)   # "* * * * *"
+CronSchedule().every_n_minutes(15)                    # "*/15 * * * *"
+CronSchedule().every_n_minutes(1)                     # "* * * * *"
+CronSchedule().every_n_minutes(15, jitter="my-task")  # "9/15 * * * *"
 ```
 
 - `n`: 1-59
+- `jitter`: a string hashed to determine the offset within the interval (keyword-only). Produces `offset/n` instead of `*/n`. Ignored when `n=1`.
 
-##### `every_n_hours(n)`
+##### `every_n_hours(n, *, jitter=None)`
 
 Run every N hours.
 
 ```python
-CronSchedule().every_n_hours(6)   # "* */6 * * *"
-CronSchedule().every_n_hours(1)   # "* * * * *"
+CronSchedule().every_n_hours(6)                    # "* */6 * * *"
+CronSchedule().every_n_hours(1)                    # "* * * * *"
+CronSchedule().every_n_hours(2, jitter="my-task")  # "54 */2 * * *"
 ```
 
 - `n`: 1-23
+- `jitter`: a string hashed to determine the minute offset (keyword-only). Sets the minute field instead of leaving it as `*`.
 
 #### Weekday Methods
 
@@ -189,6 +198,12 @@ weekly_on(1, 9, 30)    # "30 9 * * 1"
 monthly_on_day(1, 9)   # "0 9 1 * *"
 every_n_minutes(15)    # "*/15 * * * *"
 every_n_hours(6)       # "* */6 * * *"
+
+# With jitter (all shortcuts support it)
+daily_at(9, jitter="my-task")            # "54 9 * * *"
+weekly_on("monday", 9, jitter="my-task") # "54 9 * * 1"
+every_n_minutes(15, jitter="my-task")    # "9/15 * * * *"
+every_n_hours(2, jitter="my-task")       # "54 */2 * * *"
 ```
 
 ### Common Schedules
@@ -315,6 +330,30 @@ important_schedules = {daily_backup, weekly_report}
 same_schedule = CronSchedule().daily().at(2, 0)
 assert daily_backup == same_schedule
 ```
+
+### Deterministic Jitter
+
+When many tasks are scheduled at the same time (e.g. `daily_at(12)`), they all run at minute 0, causing a thundering herd. The `jitter` parameter hashes a string (typically a task name or ID) to spread tasks across minutes while keeping each schedule stable and predictable.
+
+```python
+from fluentcron import CronSchedule, daily_at
+
+# Without jitter — all three run at :00
+daily_at(12)  # "0 12 * * *"
+daily_at(12)  # "0 12 * * *"
+daily_at(12)  # "0 12 * * *"
+
+# With jitter — each task gets its own minute
+daily_at(12, jitter="send-reports")    # "5 12 * * *"
+daily_at(12, jitter="sync-inventory")  # "57 12 * * *"
+daily_at(12, jitter="refresh-cache")   # "39 12 * * *"
+
+# Works with intervals too
+CronSchedule().every_n_minutes(15, jitter="task-a")  # "7/15 * * * *"  → runs at :07, :22, :37, :52
+CronSchedule().every_n_hours(2, jitter="task-b")     # "40 */2 * * *"  → runs at :40 past every 2nd hour
+```
+
+The jitter is deterministic: the same string always produces the same offset, so schedules remain stable across restarts and deployments. The `jitter` parameter is mutually exclusive with specifying `minute` directly — passing both raises `ValueError`.
 
 ### Serialization
 

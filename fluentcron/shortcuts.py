@@ -13,29 +13,45 @@ from .types import (
 )
 
 
-def daily_at(hour: Hour, minute: Minute = 0) -> str:
+def daily_at(
+    hour: Hour, minute: Minute | None = None, *, jitter: str | None = None
+) -> str:
     """Create a daily schedule at the specified time."""
-    return str(CronSchedule().daily().at(hour, minute))
+    return str(CronSchedule().daily().at(hour, minute, jitter=jitter))
 
 
-def weekly_on(weekday: Weekday, hour: Hour, minute: Minute = 0) -> str:
+def weekly_on(
+    weekday: Weekday,
+    hour: Hour,
+    minute: Minute | None = None,
+    *,
+    jitter: str | None = None,
+) -> str:
     """Create a weekly schedule on the specified weekday and time."""
-    return str(CronSchedule().weekly().on_weekday(weekday).at(hour, minute))
+    return str(
+        CronSchedule().weekly().on_weekday(weekday).at(hour, minute, jitter=jitter)
+    )
 
 
-def monthly_on_day(day: DayOfMonth, hour: Hour, minute: Minute = 0) -> str:
+def monthly_on_day(
+    day: DayOfMonth,
+    hour: Hour,
+    minute: Minute | None = None,
+    *,
+    jitter: str | None = None,
+) -> str:
     """Create a monthly schedule on the specified day and time."""
-    return str(CronSchedule().monthly().on_day(day).at(hour, minute))
+    return str(CronSchedule().monthly().on_day(day).at(hour, minute, jitter=jitter))
 
 
-def every_n_minutes(n: MinuteInterval) -> str:
+def every_n_minutes(n: MinuteInterval, *, jitter: str | None = None) -> str:
     """Create a schedule that runs every N minutes."""
-    return str(CronSchedule().every_n_minutes(n))
+    return str(CronSchedule().every_n_minutes(n, jitter=jitter))
 
 
-def every_n_hours(n: HourInterval) -> str:
+def every_n_hours(n: HourInterval, *, jitter: str | None = None) -> str:
     """Create a schedule that runs every N hours."""
-    return str(CronSchedule().every_n_hours(n))
+    return str(CronSchedule().every_n_hours(n, jitter=jitter))
 
 
 # Common presets
