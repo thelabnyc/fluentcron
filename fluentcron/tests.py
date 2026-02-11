@@ -10,6 +10,7 @@ from . import (
     monthly_on_day,
     weekly_on,
 )
+from .schedule import _jitter_offset
 
 
 class TestCronSchedule(unittest.TestCase):
@@ -369,3 +370,92 @@ class TestRealWorldExamples(unittest.TestCase):
         # For now, test monthly on 1st
         schedule = CronSchedule().monthly().on_day(1).at(0)
         self.assertEqual(str(schedule), "0 0 1 * *")
+
+
+class TestJitter(unittest.TestCase):
+    """Test cases for deterministic jitter functionality."""
+
+    def test_jitter_offset_range(self) -> None:
+        """_jitter_offset always returns a value in [0, modulus)."""
+        for modulus in [1, 5, 15, 30, 60]:
+            for jitter in ["a", "b", "task-1", "my-unique-task-id", ""]:
+                offset = _jitter_offset(jitter, modulus)
+                self.assertGreaterEqual(offset, 0)
+                self.assertLess(offset, modulus)
+
+    def test_jitter_offset_determinism(self) -> None:
+        """Same string + modulus always produces the same result."""
+        for _ in range(10):
+            self.assertEqual(_jitter_offset("test", 60), _jitter_offset("test", 60))
+
+    def test_jitter_offset_pinned_values(self) -> None:
+        """Pinned values for mod 60."""
+        self.assertEqual(_jitter_offset("my-unique-task-id", 60), 33)
+        self.assertEqual(_jitter_offset("some-other-task", 60), 55)
+        self.assertEqual(_jitter_offset("test", 60), 12)
+        self.assertEqual(_jitter_offset("", 60), 49)
+
+    def test_at_with_jitter(self) -> None:
+        """at() with jitter computes minute from hash."""
+        schedule = CronSchedule().daily().at(12, jitter="my-unique-task-id")
+        self.assertEqual(str(schedule), "33 12 * * *")
+
+    def test_at_minute_and_jitter_raises(self) -> None:
+        """at() with both minute and jitter raises ValueError."""
+        with self.assertRaises(ValueError):
+            CronSchedule().daily().at(12, 30, jitter="task")
+
+    def test_at_default_minute_preserved(self) -> None:
+        """at() without minute or jitter defaults minute to 0."""
+        schedule = CronSchedule().daily().at(12)
+        self.assertEqual(str(schedule), "0 12 * * *")
+
+    def test_every_n_minutes_with_jitter(self) -> None:
+        """every_n_minutes() with jitter uses offset/n format."""
+        schedule = CronSchedule().every_n_minutes(15, jitter="my-unique-task-id")
+        self.assertEqual(str(schedule), "3/15 * * * *")
+
+    def test_every_n_minutes_jitter_ignored_for_1(self) -> None:
+        """every_n_minutes(1) ignores jitter since every minute is every minute."""
+        schedule = CronSchedule().every_n_minutes(1, jitter="task")
+        self.assertEqual(str(schedule), "* * * * *")
+
+    def test_every_n_hours_with_jitter(self) -> None:
+        """every_n_hours() with jitter sets minute offset."""
+        schedule = CronSchedule().every_n_hours(2, jitter="my-unique-task-id")
+        self.assertEqual(str(schedule), "33 */2 * * *")
+
+    def test_shortcut_daily_at_with_jitter(self) -> None:
+        """daily_at shortcut with jitter."""
+        self.assertEqual(daily_at(12, jitter="my-unique-task-id"), "33 12 * * *")
+
+    def test_shortcut_weekly_on_with_jitter(self) -> None:
+        """weekly_on shortcut with jitter."""
+        self.assertEqual(
+            weekly_on("monday", 12, jitter="my-unique-task-id"), "33 12 * * 1"
+        )
+
+    def test_shortcut_monthly_on_day_with_jitter(self) -> None:
+        """monthly_on_day shortcut with jitter."""
+        self.assertEqual(
+            monthly_on_day(1, 12, jitter="my-unique-task-id"), "33 12 1 * *"
+        )
+
+    def test_shortcut_every_n_minutes_with_jitter(self) -> None:
+        """every_n_minutes shortcut with jitter."""
+        self.assertEqual(
+            every_n_minutes(15, jitter="my-unique-task-id"), "3/15 * * * *"
+        )
+
+    def test_shortcut_every_n_hours_with_jitter(self) -> None:
+        """every_n_hours shortcut with jitter."""
+        self.assertEqual(every_n_hours(2, jitter="my-unique-task-id"), "33 */2 * * *")
+
+    def test_shortcut_minute_and_jitter_raises(self) -> None:
+        """Shortcuts reject minute + jitter together."""
+        with self.assertRaises(ValueError):
+            daily_at(12, 30, jitter="task")
+        with self.assertRaises(ValueError):
+            weekly_on("monday", 12, 30, jitter="task")
+        with self.assertRaises(ValueError):
+            monthly_on_day(1, 12, 30, jitter="task")
