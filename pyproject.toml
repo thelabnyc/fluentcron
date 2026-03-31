@@ -22,7 +22,7 @@ dev = [
     "mypy (>=1.19.1)",
     "ruff (>=0.15.8)",
     "coverage (>=7.13.5)",
-    "tox (>=4.50.3)",
+    "tox (>=4.51.0)",
 ]
 
 [tool.hatch.build.targets.wheel]
