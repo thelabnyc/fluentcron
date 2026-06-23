@@ -153,7 +153,7 @@ dev = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "coverage", specifier = ">=7.14.1" },
+    { name = "coverage", specifier = ">=7.14.2" },
     { name = "mypy", specifier = ">=2.1.0" },
     { name = "ruff", specifier = ">=0.15.18" },
     { name = "tox", specifier = ">=4.55.1" },
