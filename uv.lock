@@ -157,7 +157,7 @@ dev = [
     { name = "coverage", specifier = ">=7.15.2" },
     { name = "mypy", specifier = ">=2.3.0" },
     { name = "ruff", specifier = ">=0.15.22" },
-    { name = "tox", specifier = ">=4.56.4" },
+    { name = "tox", specifier = ">=4.57.0" },
 ]
 
 [[package]]
