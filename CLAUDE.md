@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-fluentcron is a Python library providing a fluent interface for constructing crontab schedule expressions. It has zero runtime dependencies and requires Python 3.13+.
+fluentcron is a Python library providing a fluent interface for constructing crontab schedule expressions. It has zero runtime dependencies and requires Python 3.14+.
 
 ## Development Commands
 
@@ -46,5 +46,5 @@ Tests live in `fluentcron/tests.py` using `unittest`.
 
 - Strict mypy configuration (see `pyproject.toml`)
 - Ruff for linting/formatting, 160 char line length
-- Python 3.13+ syntax (uses `type` statements)
+- Python 3.14+ syntax (uses `type` statements)
 - Commitizen for conventional commit messages
