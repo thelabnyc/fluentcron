@@ -9,7 +9,7 @@ A fluent interface for constructing crontab schedules in Python. Build readable,
 ## Features
 
 - **Fluent API**: Chain methods to build schedules naturally
-- **Type Safety**: Full type hints and validation with Python 3.13+
+- **Type Safety**: Full type hints and validation with Python 3.14+
 - **Zero Dependencies**: Uses only Python standard library
 - **Immutable**: Schedule objects are immutable and hashable
 - **Readable**: Self-documenting code that's easy to understand
@@ -294,7 +294,7 @@ cert_check = CronSchedule().monthly().on_day(1).at(1, 0)
 
 ## Type Safety
 
-This library provides full type safety with Python 3.13+ type hints:
+This library provides full type safety with Python 3.14+ type hints:
 
 ```python
 from fluentcron import CronSchedule, Hour, Minute, Weekday
