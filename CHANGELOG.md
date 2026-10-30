@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.3.0 (2026-10-30)
+
+### Feat
+
+- support Python 3.15 and drop Python 3.13
+
+### Refactor
+
+- adopt Python 3.14 syntax
+
 ## v0.2.0 (2026-02-10)
 
 ### Feat
