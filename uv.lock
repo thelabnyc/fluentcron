@@ -203,7 +203,7 @@ dev = [
     { name = "coverage", specifier = ">=7.17.1" },
     { name = "mypy", specifier = ">=2.4.1" },
     { name = "ruff", specifier = ">=0.17.3" },
-    { name = "tox", specifier = ">=4.67.6" },
+    { name = "tox", specifier = ">=4.67.8" },
 ]
 
 [[package]]
